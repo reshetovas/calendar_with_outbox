@@ -1,0 +1,197 @@
+basePath: /calendar/api
+definitions:
+  calendar_internal_application_entity.Event:
+    properties:
+      RqTm:
+        description: time request
+        type: string
+      creationDate:
+        type: string
+      dateEvent:
+        type: string
+      descriptionEvent:
+        type: string
+      durationEvent:
+        type: string
+      id:
+        type: string
+      timeForNotification:
+        type: string
+      title:
+        type: string
+      userID:
+        type: string
+    type: object
+  calendar_internal_application_entity.HealthCheckItem:
+    properties:
+      error:
+        example: Database connection failed
+        type: string
+      status:
+        example: true
+        type: boolean
+      type:
+        example: postgresql
+        type: string
+    type: object
+  calendar_internal_application_entity.HealthCheckResponse:
+    properties:
+      checks:
+        $ref: '#/definitions/calendar_internal_application_entity.HealthCheckResponseData'
+      message:
+        example: success
+        type: string
+      status:
+        example: true
+        type: boolean
+      version:
+        example: 0.1.0
+        type: string
+    type: object
+  calendar_internal_application_entity.HealthCheckResponseData:
+    properties:
+      database:
+        $ref: '#/definitions/calendar_internal_application_entity.HealthCheckItem'
+      kafka:
+        $ref: '#/definitions/calendar_internal_application_entity.HealthCheckItem'
+    type: object
+info:
+  contact: {}
+  description: Микросервис календарь
+  title: Calendar Service API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет доступность базы данных PostgreSQL и Kafka (Producer
+        и Consumer). Возвращает детальную информацию о состоянии каждого компонента.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Все сервисы доступны
+          schema:
+            $ref: '#/definitions/calendar_internal_application_entity.HealthCheckResponse'
+        "503":
+          description: Один или несколько сервисов недоступны
+          schema:
+            $ref: '#/definitions/calendar_internal_application_entity.HealthCheckResponse'
+      summary: Проверка состояния сервиса
+      tags:
+      - Health
+  /v1/event:
+    get:
+      description: Возвращает список событий за период, заданный query-параметрами
+        start и end
+      parameters:
+      - description: Дата/время начала периода (например, 2026-01-01T00:00:00Z)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: Дата/время конца периода (например, 2026-01-31T23:59:59Z)
+        in: query
+        name: end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/calendar_internal_application_entity.Event'
+            type: array
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Получение событий за период
+      tags:
+      - Event
+    post:
+      consumes:
+      - application/json
+      description: Создает новое событие и записывает его в БД
+      parameters:
+      - description: Данные события
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/calendar_internal_application_entity.Event'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Создание события
+      tags:
+      - Event
+    put:
+      consumes:
+      - application/json
+      description: Обновляет существующее событие по данным из тела запроса
+      parameters:
+      - description: Данные события для обновления
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/calendar_internal_application_entity.Event'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Обновление события
+      tags:
+      - Event
+  /v1/event/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет событие по идентификатору
+      parameters:
+      - description: ID события
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Удаление события
+      tags:
+      - Event
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

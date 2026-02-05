@@ -1,0 +1,293 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Микросервис календарь",
+        "title": "Calendar Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/calendar/api",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Проверяет доступность базы данных PostgreSQL и Kafka (Producer и Consumer). Возвращает детальную информацию о состоянии каждого компонента.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Проверка состояния сервиса",
+                "responses": {
+                    "200": {
+                        "description": "Все сервисы доступны",
+                        "schema": {
+                            "$ref": "#/definitions/calendar_internal_application_entity.HealthCheckResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Один или несколько сервисов недоступны",
+                        "schema": {
+                            "$ref": "#/definitions/calendar_internal_application_entity.HealthCheckResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/event": {
+            "get": {
+                "description": "Возвращает список событий за период, заданный query-параметрами start и end",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Получение событий за период",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Дата/время начала периода (например, 2026-01-01T00:00:00Z)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата/время конца периода (например, 2026-01-31T23:59:59Z)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/calendar_internal_application_entity.Event"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Обновляет существующее событие по данным из тела запроса",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Обновление события",
+                "parameters": [
+                    {
+                        "description": "Данные события для обновления",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/calendar_internal_application_entity.Event"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает новое событие и записывает его в БД",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Создание события",
+                "parameters": [
+                    {
+                        "description": "Данные события",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/calendar_internal_application_entity.Event"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/v1/event/{id}": {
+            "delete": {
+                "description": "Удаляет событие по идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Удаление события",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID события",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "calendar_internal_application_entity.Event": {
+            "type": "object",
+            "properties": {
+                "RqTm": {
+                    "description": "time request",
+                    "type": "string"
+                },
+                "creationDate": {
+                    "type": "string"
+                },
+                "dateEvent": {
+                    "type": "string"
+                },
+                "descriptionEvent": {
+                    "type": "string"
+                },
+                "durationEvent": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "timeForNotification": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "calendar_internal_application_entity.HealthCheckItem": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Database connection failed"
+                },
+                "status": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "type": {
+                    "type": "string",
+                    "example": "postgresql"
+                }
+            }
+        },
+        "calendar_internal_application_entity.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "checks": {
+                    "$ref": "#/definitions/calendar_internal_application_entity.HealthCheckResponseData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "status": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "version": {
+                    "type": "string",
+                    "example": "0.1.0"
+                }
+            }
+        },
+        "calendar_internal_application_entity.HealthCheckResponseData": {
+            "type": "object",
+            "properties": {
+                "database": {
+                    "$ref": "#/definitions/calendar_internal_application_entity.HealthCheckItem"
+                },
+                "kafka": {
+                    "$ref": "#/definitions/calendar_internal_application_entity.HealthCheckItem"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
